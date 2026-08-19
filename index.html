@@ -441,9 +441,9 @@ function createDefaultPlayer(username){
     return {
         username:username,
         name:"",
-        age:18,
-        weight:70,
-        height:170,
+        age:null,
+        weight:null,
+        height:null,
         setupComplete:false,
         avatar:"",
         level:1,
@@ -685,24 +685,51 @@ async function finishPlayerSetup(){
     if(!player) return;
 
     const name=document.getElementById("setup-name").value.trim();
-    const age=Number(document.getElementById("setup-age").value);
-    const weight=Number(document.getElementById("setup-weight").value);
-    const height=Number(document.getElementById("setup-height").value);
+    const ageValue=document.getElementById("setup-age").value.trim();
+    const weightValue=document.getElementById("setup-weight").value.trim();
+    const heightValue=document.getElementById("setup-height").value.trim();
+
+    const age=Number(ageValue);
+    const weight=Number(weightValue);
+    const height=Number(heightValue);
+
     const message=document.getElementById("setup-message");
 
     message.textContent="";
 
     if(name.length<2){
-        message.textContent="أدخل اسمًا صحيحًا."; return;
+        message.textContent="❌ أدخل اسم اللاعب.";
+        return;
     }
-    if(age<10 || age>100){
-        message.textContent="العمر يجب أن يكون بين 10 و100."; return;
+
+    if(ageValue===""){
+        message.textContent="❌ يجب إدخال العمر.";
+        return;
     }
-    if(weight<20 || weight>300){
-        message.textContent="الوزن يجب أن يكون بين 20 و300 kg."; return;
+
+    if(weightValue===""){
+        message.textContent="❌ يجب إدخال الوزن.";
+        return;
     }
-    if(height<80 || height>250){
-        message.textContent="الطول يجب أن يكون بين 80 و250 cm."; return;
+
+    if(heightValue===""){
+        message.textContent="❌ يجب إدخال الطول.";
+        return;
+    }
+
+    if(!Number.isFinite(age) || age<10 || age>100){
+        message.textContent="❌ العمر يجب أن يكون بين 10 و100.";
+        return;
+    }
+
+    if(!Number.isFinite(weight) || weight<20 || weight>300){
+        message.textContent="❌ الوزن يجب أن يكون بين 20 و300 kg.";
+        return;
+    }
+
+    if(!Number.isFinite(height) || height<80 || height>250){
+        message.textContent="❌ الطول يجب أن يكون بين 80 و250 cm.";
+        return;
     }
 
     player.name=name;
@@ -717,12 +744,18 @@ async function finishPlayerSetup(){
     document.getElementById("home").classList.remove("hidden");
 
     const firstNav=document.querySelector("nav button");
-    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+
+    document.querySelectorAll("nav button").forEach(b=>{
+        b.classList.remove("active");
+    });
+
     firstNav.classList.add("active");
 
     updateUI();
+
     toast("⚡ تم تهيئة اللاعب بنجاح","gold");
 }
+
 
 /* =========================================================
    SAVE
@@ -895,10 +928,10 @@ function updateUI(){
 
     updateSetupVisibility();
 
-    document.getElementById("name").textContent=player.name || player.username || "---";
-    document.getElementById("age").textContent=(player.age||0)+" سنة";
-    document.getElementById("weight").textContent=(player.weight||0)+" kg";
-    document.getElementById("height").textContent=(player.height||0)+" cm";
+    document.getElementById("setup-name").value=player.name || player.username || "";
+    document.getElementById("setup-age").value=player.age ?? "";
+    document.getElementById("setup-weight").value=player.weight ?? "";
+    document.getElementById("setup-height").value=player.height ?? "";
     document.getElementById("level").textContent=player.level;
     document.getElementById("exp").textContent=player.exp;
     document.getElementById("need").textContent=expNeeded();
