@@ -439,29 +439,45 @@ function getDateKey(date = new Date()){
 ========================================================= */
 function createDefaultPlayer(username){
     return {
-        username:username,
-        name:"",
-        age:null,
-        weight:null,
-        height:null,
-        setupComplete:false,
-        avatar:"",
-        level:1,
-        exp:0,
-        gold:0,
-        totalGold:0,
-        statPoints:0,
-        stats:{HP:1,ATK:1,STM:1,MP:1},
-        completedTotal:0,
-        completedDates:{},
-        tasks:generateTaskArray(),
-        lastReset:getDateKey(),
-        achievements:[],
-        inventory:[],
-        sound:true
+        username: username || "",
+        name: "",
+        age: null,
+        weight: null,
+        height: null,
+
+        setupComplete: false,
+
+        avatar: "",
+
+        level: 1,
+        exp: 0,
+
+        gold: 0,
+        totalGold: 0,
+
+        statPoints: 0,
+
+        stats: {
+            HP: 1,
+            ATK: 1,
+            STM: 1,
+            MP: 1
+        },
+
+        completedTotal: 0,
+        completedDates: {},
+
+        tasks: generateTaskArray(),
+
+        lastReset: getDateKey(),
+
+        achievements: [],
+
+        inventory: [],
+
+        sound: true
     };
 }
-
 /* =========================================================
    INTERNAL AUTH EMAIL
 ========================================================= */
@@ -475,31 +491,139 @@ function internalEmail(username){
 ========================================================= */
 function normalizePlayer(raw, username){
     const base = createDefaultPlayer(username);
-    const p = raw && typeof raw==="object" ? raw : {};
+
+    const p = raw && typeof raw === "object" ? raw : {};
 
     const normalized = {
         ...base,
         ...p,
+
         username: username || p.username || "",
-        stats:{...base.stats,...(p.stats||{})},
-        completedDates:{...(p.completedDates||{})},
-        achievements:Array.isArray(p.achievements)?p.achievements:[],
-        inventory:Array.isArray(p.inventory)?p.inventory:[],
-        tasks:Array.isArray(p.tasks)?p.tasks:[],
-        sound:p.sound!==false
+
+        stats: {
+            ...base.stats,
+            ...(p.stats || {})
+        },
+
+        completedDates: {
+            ...(p.completedDates || {})
+        },
+
+        achievements: Array.isArray(p.achievements)
+            ? p.achievements
+            : [],
+
+        inventory: Array.isArray(p.inventory)
+            ? p.inventory
+            : [],
+
+        tasks: Array.isArray(p.tasks)
+            ? p.tasks
+            : [],
+
+        sound: p.sound !== false
     };
 
-    if(!normalized.lastReset) normalized.lastReset=getDateKey();
-    if(typeof normalized.level!=="number" || normalized.level<1) normalized.level=1;
-    if(typeof normalized.exp!=="number" || normalized.exp<0) normalized.exp=0;
-    if(typeof normalized.gold!=="number" || normalized.gold<0) normalized.gold=0;
-    if(typeof normalized.totalGold!=="number" || normalized.totalGold<0) normalized.totalGold=0;
-    if(typeof normalized.statPoints!=="number" || normalized.statPoints<0) normalized.statPoints=0;
-    if(typeof normalized.completedTotal!=="number" || normalized.completedTotal<0) normalized.completedTotal=0;
+    /*
+     * لا نضع أي قيم افتراضية للعمر
+     * أو الوزن أو الطول.
+     */
 
-    if(!normalized.setupComplete && normalized.name) {
-        normalized.setupComplete = true;
+    if(
+        normalized.age !== null &&
+        normalized.age !== undefined &&
+        normalized.age !== ""
+    ){
+        normalized.age = Number(normalized.age);
+    }else{
+        normalized.age = null;
     }
+
+    if(
+        normalized.weight !== null &&
+        normalized.weight !== undefined &&
+        normalized.weight !== ""
+    ){
+        normalized.weight = Number(normalized.weight);
+    }else{
+        normalized.weight = null;
+    }
+
+    if(
+        normalized.height !== null &&
+        normalized.height !== undefined &&
+        normalized.height !== ""
+    ){
+        normalized.height = Number(normalized.height);
+    }else{
+        normalized.height = null;
+    }
+
+    if(!normalized.lastReset){
+        normalized.lastReset = getDateKey();
+    }
+
+    if(
+        typeof normalized.level !== "number" ||
+        normalized.level < 1
+    ){
+        normalized.level = 1;
+    }
+
+    if(
+        typeof normalized.exp !== "number" ||
+        normalized.exp < 0
+    ){
+        normalized.exp = 0;
+    }
+
+    if(
+        typeof normalized.gold !== "number" ||
+        normalized.gold < 0
+    ){
+        normalized.gold = 0;
+    }
+
+    if(
+        typeof normalized.totalGold !== "number" ||
+        normalized.totalGold < 0
+    ){
+        normalized.totalGold = 0;
+    }
+
+    if(
+        typeof normalized.statPoints !== "number" ||
+        normalized.statPoints < 0
+    ){
+        normalized.statPoints = 0;
+    }
+
+    if(
+        typeof normalized.completedTotal !== "number" ||
+        normalized.completedTotal < 0
+    ){
+        normalized.completedTotal = 0;
+    }
+
+    /*
+     * النظام يعتبر اللاعب مهيأ فقط إذا كانت
+     * كل البيانات الأساسية موجودة.
+     */
+
+    const validSetup =
+        typeof normalized.name === "string" &&
+        normalized.name.trim().length >= 2 &&
+        Number.isFinite(normalized.age) &&
+        normalized.age >= 10 &&
+        normalized.age <= 100 &&
+        Number.isFinite(normalized.weight) &&
+        normalized.weight >= 20 &&
+        normalized.weight <= 300 &&
+        Number.isFinite(normalized.height) &&
+        normalized.height >= 80 &&
+        normalized.height <= 250;
+
+    normalized.setupComplete = validSetup;
 
     return normalized;
 }
@@ -664,96 +788,46 @@ function startApplication(){
    PLAYER SETUP
 ========================================================= */
 function updateSetupVisibility(){
-    const setup=document.getElementById("player-setup");
+    const setup = document.getElementById("player-setup");
 
-    if(!player || player.setupComplete){
+    if(!player){
         setup.classList.add("hidden");
         return;
     }
 
+    /*
+     * إذا كانت بيانات اللاعب مكتملة:
+     * نخفي شاشة الإعداد.
+     */
+    if(player.setupComplete){
+        setup.classList.add("hidden");
+        return;
+    }
+
+    /*
+     * إذا لم تكن البيانات مكتملة:
+     * نظهر شاشة الإعداد.
+     */
     setup.classList.remove("hidden");
 
-    document.getElementById("setup-name").value=player.name || player.username || "";
-    document.getElementById("setup-age").value=player.age || 18;
-    document.getElementById("setup-weight").value=player.weight || 70;
-    document.getElementById("setup-height").value=player.height || 170;
+    document.getElementById("setup-name").value =
+        player.name || "";
 
-    document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
-}
+    document.getElementById("setup-age").value =
+        player.age ?? "";
 
-async function finishPlayerSetup(){
-    if(!player) return;
+    document.getElementById("setup-weight").value =
+        player.weight ?? "";
 
-    const name=document.getElementById("setup-name").value.trim();
-    const ageValue=document.getElementById("setup-age").value.trim();
-    const weightValue=document.getElementById("setup-weight").value.trim();
-    const heightValue=document.getElementById("setup-height").value.trim();
+    document.getElementById("setup-height").value =
+        player.height ?? "";
 
-    const age=Number(ageValue);
-    const weight=Number(weightValue);
-    const height=Number(heightValue);
-
-    const message=document.getElementById("setup-message");
-
-    message.textContent="";
-
-    if(name.length<2){
-        message.textContent="❌ أدخل اسم اللاعب.";
-        return;
-    }
-
-    if(ageValue===""){
-        message.textContent="❌ يجب إدخال العمر.";
-        return;
-    }
-
-    if(weightValue===""){
-        message.textContent="❌ يجب إدخال الوزن.";
-        return;
-    }
-
-    if(heightValue===""){
-        message.textContent="❌ يجب إدخال الطول.";
-        return;
-    }
-
-    if(!Number.isFinite(age) || age<10 || age>100){
-        message.textContent="❌ العمر يجب أن يكون بين 10 و100.";
-        return;
-    }
-
-    if(!Number.isFinite(weight) || weight<20 || weight>300){
-        message.textContent="❌ الوزن يجب أن يكون بين 20 و300 kg.";
-        return;
-    }
-
-    if(!Number.isFinite(height) || height<80 || height>250){
-        message.textContent="❌ الطول يجب أن يكون بين 80 و250 cm.";
-        return;
-    }
-
-    player.name=name;
-    player.age=age;
-    player.weight=weight;
-    player.height=height;
-    player.setupComplete=true;
-
-    await savePlayerNow();
-
-    document.getElementById("player-setup").classList.add("hidden");
-    document.getElementById("home").classList.remove("hidden");
-
-    const firstNav=document.querySelector("nav button");
-
-    document.querySelectorAll("nav button").forEach(b=>{
-        b.classList.remove("active");
+    /*
+     * إخفاء جميع صفحات النظام أثناء الإعداد.
+     */
+    document.querySelectorAll(".page").forEach(page=>{
+        page.classList.add("hidden");
     });
-
-    firstNav.classList.add("active");
-
-    updateUI();
-
-    toast("⚡ تم تهيئة اللاعب بنجاح","gold");
 }
 
 
@@ -928,10 +1002,23 @@ function updateUI(){
 
     updateSetupVisibility();
 
-    document.getElementById("setup-name").value=player.name || player.username || "";
-    document.getElementById("setup-age").value=player.age ?? "";
-    document.getElementById("setup-weight").value=player.weight ?? "";
-    document.getElementById("setup-height").value=player.height ?? "";
+    document.getElementById("name").textContent =
+        player.name || "---";
+
+    document.getElementById("age").textContent =
+        player.age !== null && player.age !== undefined
+            ? player.age + " سنة"
+            : "---";
+
+    document.getElementById("weight").textContent =
+        player.weight !== null && player.weight !== undefined
+            ? player.weight + " kg"
+            : "---";
+
+    document.getElementById("height").textContent =
+        player.height !== null && player.height !== undefined
+            ? player.height + " cm"
+            : "---";
     document.getElementById("level").textContent=player.level;
     document.getElementById("exp").textContent=player.exp;
     document.getElementById("need").textContent=expNeeded();
@@ -1538,9 +1625,4 @@ initialize();
 </script>
 </body>
 </html>
-'''
 
-path = Path("/mnt/data/shadow-system.html")
-path.write_text(html, encoding="utf-8")
-print(f"تم إنشاء الملف الكامل: {path}")
-print(f"عدد الأحرف: {len(html):,}")
