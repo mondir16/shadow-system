@@ -1156,7 +1156,92 @@ main{
 
 <main>
 
+<!-- =====================================================
+     PLAYER SETUP
+====================================================== -->
 
+<div id="player-setup" class="hidden">
+
+    <div class="setup-box">
+
+        <div class="logo">
+            SHADOW SYSTEM
+        </div>
+
+        <div class="logo-small">
+            INITIALIZE PLAYER
+        </div>
+
+        <div class="setup-warning">
+            ⚠️ يجب إدخال بيانات اللاعب قبل بدء النظام
+        </div>
+
+        <label class="form-label">
+            👤 اسم اللاعب
+        </label>
+
+        <input
+            id="setup-name"
+            class="input"
+            type="text"
+            placeholder="اسمك"
+            maxlength="30"
+        >
+
+        <label class="form-label">
+            🎂 العمر
+        </label>
+
+        <input
+            id="setup-age"
+            class="input"
+            type="number"
+            min="10"
+            max="100"
+            placeholder="18"
+        >
+
+        <label class="form-label">
+            ⚖️ الوزن (kg)
+        </label>
+
+        <input
+            id="setup-weight"
+            class="input"
+            type="number"
+            min="20"
+            max="300"
+            placeholder="70"
+        >
+
+        <label class="form-label">
+            📏 الطول (cm)
+        </label>
+
+        <input
+            id="setup-height"
+            class="input"
+            type="number"
+            min="80"
+            max="250"
+            placeholder="170"
+        >
+
+        <button
+            class="primary"
+            onclick="finishPlayerSetup()"
+        >
+            ⚡ START SYSTEM
+        </button>
+
+        <div
+            id="setup-message"
+            class="auth-message"
+        ></div>
+
+    </div>
+
+</div>
 <!-- =====================================================
      HOME
 ====================================================== -->
