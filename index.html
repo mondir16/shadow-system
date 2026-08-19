@@ -327,15 +327,54 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 </section>
 
 <section id="settings" class="page hidden">
+
+    <div class="panel">
+        <div class="title">PLAYER INFORMATION</div>
+
+        <label class="form-label">👤 اسم اللاعب</label>
+        <input id="edit-name" class="input" type="text" maxlength="30">
+
+        <label class="form-label">🎂 العمر</label>
+        <input id="edit-age" class="input" type="number" min="10" max="100">
+
+        <label class="form-label">⚖️ الوزن (kg)</label>
+        <input id="edit-weight" class="input" type="number" min="20" max="300">
+
+        <label class="form-label">📏 الطول (cm)</label>
+        <input id="edit-height" class="input" type="number" min="80" max="250">
+
+        <button class="primary" onclick="savePlayerInformation()">
+            💾 حفظ بيانات اللاعب
+        </button>
+
+        <div id="edit-message" class="auth-message"></div>
+    </div>
+
     <div class="panel">
         <div class="title">SYSTEM SETTINGS</div>
-        <button class="setting" onclick="toggleSound()">🔊 الصوت: <span id="sound">ON</span></button>
-        <button class="setting" onclick="exportSave()">📤 تصدير نسخة احتياطية</button>
-        <button class="setting" onclick="document.getElementById('import-file').click()">📥 استيراد نسخة احتياطية</button>
-        <input id="import-file" type="file" accept=".json,application/json" hidden onchange="importSave(event)">
-    </div>
-</section>
 
+        <button class="setting" onclick="toggleSound()">
+            🔊 الصوت: <span id="sound">ON</span>
+        </button>
+
+        <button class="setting" onclick="exportSave()">
+            📤 تصدير نسخة احتياطية
+        </button>
+
+        <button class="setting" onclick="document.getElementById('import-file').click()">
+            📥 استيراد نسخة احتياطية
+        </button>
+
+        <input
+            id="import-file"
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onchange="importSave(event)"
+        >
+    </div>
+
+</section>
 </main>
 </div>
 
@@ -486,6 +525,93 @@ function internalEmail(username){
     return safe+"@shadow-system.local";
 }
 
+
+
+/* =========================================================
+   EDIT PLAYER INFORMATION
+========================================================= */
+function loadPlayerInformation(){
+
+    if(!player) return;
+
+    document.getElementById("edit-name").value =
+        player.name || "";
+
+    document.getElementById("edit-age").value =
+        player.age ?? "";
+
+    document.getElementById("edit-weight").value =
+        player.weight ?? "";
+
+    document.getElementById("edit-height").value =
+        player.height ?? "";
+}
+
+
+/* =========================================================
+   SAVE PLAYER INFORMATION
+========================================================= */
+async function savePlayerInformation(){
+
+    if(!player) return;
+
+    const name =
+        document.getElementById("edit-name").value.trim();
+
+    const age =
+        Number(document.getElementById("edit-age").value);
+
+    const weight =
+        Number(document.getElementById("edit-weight").value);
+
+    const height =
+        Number(document.getElementById("edit-height").value);
+
+    const message =
+        document.getElementById("edit-message");
+
+    message.textContent = "";
+
+    if(name.length < 2){
+        message.textContent = "❌ الاسم يجب أن يحتوي على حرفين على الأقل";
+        return;
+    }
+
+    if(!Number.isFinite(age) || age < 10 || age > 100){
+        message.textContent = "❌ العمر غير صحيح";
+        return;
+    }
+
+    if(!Number.isFinite(weight) || weight < 20 || weight > 300){
+        message.textContent = "❌ الوزن غير صحيح";
+        return;
+    }
+
+    if(!Number.isFinite(height) || height < 80 || height > 250){
+        message.textContent = "❌ الطول غير صحيح";
+        return;
+    }
+
+    player.name = name;
+    player.age = age;
+    player.weight = weight;
+    player.height = height;
+
+    player.setupComplete = true;
+
+    await savePlayerNow();
+
+    updateUI();
+
+    message.textContent = "✓ تم حفظ بيانات اللاعب";
+
+    toast("💾 تم تحديث بيانات اللاعب","gold");
+
+    playSound("complete");
+}
+    
+
+    
 /* =========================================================
    SAFE PLAYER NORMALIZATION
 ========================================================= */
@@ -829,7 +955,74 @@ function updateSetupVisibility(){
         page.classList.add("hidden");
     });
 }
+    
+/* =========================================================
+   FINISH PLAYER SETUP
+========================================================= */
+async function finishPlayerSetup(){
+    if(!player) return;
 
+    const name = document.getElementById("setup-name").value.trim();
+    const age = Number(document.getElementById("setup-age").value);
+    const weight = Number(document.getElementById("setup-weight").value);
+    const height = Number(document.getElementById("setup-height").value);
+
+    const message = document.getElementById("setup-message");
+
+    message.textContent = "";
+
+    if(name.length < 2){
+        message.textContent = "❌ أدخل اسمًا صحيحًا";
+        return;
+    }
+
+    if(!Number.isFinite(age) || age < 10 || age > 100){
+        message.textContent = "❌ العمر يجب أن يكون بين 10 و 100 سنة";
+        return;
+    }
+
+    if(!Number.isFinite(weight) || weight < 20 || weight > 300){
+        message.textContent = "❌ الوزن يجب أن يكون بين 20 و 300 kg";
+        return;
+    }
+
+    if(!Number.isFinite(height) || height < 80 || height > 250){
+        message.textContent = "❌ الطول يجب أن يكون بين 80 و 250 cm";
+        return;
+    }
+
+    player.name = name;
+    player.age = age;
+    player.weight = weight;
+    player.height = height;
+
+    player.setupComplete = true;
+
+    await savePlayerNow();
+
+    document.getElementById("player-setup").classList.add("hidden");
+
+    document.querySelectorAll(".page").forEach(page=>{
+        page.classList.add("hidden");
+    });
+
+    document.getElementById("home").classList.remove("hidden");
+
+    document.querySelectorAll("nav button").forEach(btn=>{
+        btn.classList.remove("active");
+    });
+
+    const homeButton = document.querySelector('nav button[onclick*="showPage(\'home\'"]');
+
+    if(homeButton){
+        homeButton.classList.add("active");
+    }
+
+    updateUI();
+
+    toast("⚡ تم تفعيل SHADOW SYSTEM بنجاح","gold");
+    playSound("level");
+}
 
 /* =========================================================
    SAVE
@@ -1511,9 +1704,12 @@ function showPage(pageId,button){
     document.querySelectorAll("nav button").forEach(btn=>btn.classList.remove("active"));
     if(button) button.classList.add("active");
 
+
     if(pageId==="calendar-page") renderCalendar();
     if(pageId==="shop") renderShop();
     if(pageId==="achievements") renderAchievements();
+    if(pageId==="settings"){
+        loadPlayerInformation();
 }
 
 /* =========================================================
@@ -1625,4 +1821,3 @@ initialize();
 </script>
 </body>
 </html>
-
