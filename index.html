@@ -1704,14 +1704,11 @@ function showPage(pageId,button){
     document.querySelectorAll("nav button").forEach(btn=>btn.classList.remove("active"));
     if(button) button.classList.add("active");
 
-
     if(pageId==="calendar-page") renderCalendar();
     if(pageId==="shop") renderShop();
     if(pageId==="achievements") renderAchievements();
     if(pageId==="settings"){
         loadPlayerInformation();
-    }
-}
     
 /* =========================================================
    TOAST
