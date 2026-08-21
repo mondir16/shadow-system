@@ -155,6 +155,25 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 .toast.gold{border-color:#d2a632}.toast.danger{border-color:#d63853}
 @keyframes toastIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
 
+
+/* ================= ARENA ================= */
+.arena-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.arena-card{padding:18px;background:#061321;border:1px solid #214967}
+.arena-id{font-size:24px;font-weight:900;color:#67d5ff;letter-spacing:2px;text-align:center;margin:12px 0}
+.arena-form{display:grid;gap:10px}.arena-form input{margin:0}
+.arena-battle{position:relative;overflow:hidden;text-align:center;padding:20px;background:radial-gradient(circle,#0c2b43,#04101c 70%);border:1px solid #168cff}
+.fighters{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.fighter{padding:15px;background:#061321;border:1px solid #214967;transition:.25s}
+.fighter.attack{animation:fighterAttack .35s ease}.fighter.hit{animation:fighterHit .45s ease}
+.fighter-name{font-weight:900;color:#67d5ff}.fighter-stats{color:#8aa7ba;font-size:12px;margin-top:8px}
+.vs{font-size:38px;font-weight:900;color:#ff6680;text-shadow:0 0 20px #ff3155;animation:vsPulse 1s infinite}
+.battle-log{min-height:55px;margin-top:14px;padding:10px;color:#9ec2d6;background:#020914;border:1px solid #15374f}
+.arena-status{margin-top:12px;color:#ffd65d;font-weight:900}.arena-success{color:#5ddd9b}.arena-danger{color:#ff8296}
+@keyframes fighterAttack{50%{transform:translateX(-8px) scale(1.03)}}
+@keyframes fighterHit{25%{transform:translateX(8px);filter:brightness(1.8)}}
+@keyframes vsPulse{50%{transform:scale(1.12);opacity:.7}}
+@media(max-width:700px){.arena-grid{grid-template-columns:1fr}.fighters{grid-template-columns:1fr}.vs{font-size:30px}}
+
 @media(max-width:900px){
     .stats{grid-template-columns:repeat(2,1fr)}.shop{grid-template-columns:repeat(3,1fr)}
     .achievements{grid-template-columns:repeat(2,1fr)}
@@ -215,6 +234,7 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 <nav>
     <button class="active" onclick="showPage('home',this)">🏠 الرئيسية</button>
     <button onclick="showPage('quests',this)">🎯 المهام</button>
+    <button onclick="showPage('arena',this)">⚔️ ARENA</button>
     <button onclick="showPage('stats',this)">⚔️ Stats</button>
     <button onclick="showPage('calendar-page',this)">📅 التقويم</button>
     <button onclick="showPage('shop',this)">🛒 المتجر</button>
@@ -297,6 +317,43 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 <section id="quests" class="page hidden">
     <div class="panel"><div class="title">DAILY QUESTS</div><div id="quest-list"></div></div>
     <div class="panel"><div class="title">⚠️ PENALTIES</div><div id="penalties"></div></div>
+</section>
+
+
+<section id="arena" class="page hidden">
+    <div class="panel">
+        <div class="title">⚔️ SHADOW ARENA — 1 VS 1</div>
+        <div class="arena-grid">
+            <div class="arena-card">
+                <div class="title">PLAYER ID</div>
+                <div id="arena-player-id" class="arena-id">---</div>
+                <div style="text-align:center;color:#66859c">أرسل هذا الـ ID لصديقك للانضمام إلى مباراتك.</div>
+                <button class="primary" style="margin-top:12px" onclick="copyPlayerId()">📋 نسخ ID</button>
+            </div>
+            <div class="arena-card">
+                <div class="title">JOIN / CREATE MATCH</div>
+                <div class="arena-form">
+                    <input id="arena-opponent-id" class="input" placeholder="Player ID: SHD-XXXXXX">
+                    <input id="arena-wager" class="input" type="number" min="25" step="1" placeholder="الرهان — الحد الأدنى 25 Gold">
+                    <button class="primary" onclick="createArenaMatch()">⚔️ إنشاء مباراة</button>
+                    <button class="setting" onclick="joinArenaMatch()">🚪 الانضمام بواسطة ID</button>
+                </div>
+                <div id="arena-message" class="auth-message"></div>
+            </div>
+        </div>
+    </div>
+    <div id="arena-battle-panel" class="panel hidden">
+        <div class="title">🔥 BATTLE</div>
+        <div class="arena-battle">
+            <div class="fighters">
+                <div id="fighter-me" class="fighter"><div id="fighter-me-name" class="fighter-name">YOU</div><div id="fighter-me-stats" class="fighter-stats">---</div></div>
+                <div class="vs">VS</div>
+                <div id="fighter-opponent" class="fighter"><div id="fighter-opponent-name" class="fighter-name">OPPONENT</div><div id="fighter-opponent-stats" class="fighter-stats">---</div></div>
+            </div>
+            <div id="arena-status" class="arena-status">في انتظار اللاعب الآخر...</div>
+            <div id="battle-log" class="battle-log">أدخل Player ID وأنشئ/انضم إلى مباراة.</div>
+        </div>
+    </div>
 </section>
 
 <section id="stats" class="page hidden">
@@ -402,7 +459,7 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
             letter-spacing:1px;
             text-shadow:none;
         ">
-            VERSION: 1.6.7
+            VERSION: 2.0.0
         </div>
     </div>
 </div>
@@ -436,6 +493,9 @@ let appStarted = false;
 let timerInterval = null;
 let dayInterval = null;
 let authBusy = false;
+let activeArenaMatch = null;
+let arenaChannel = null;
+const arenaSettledMatches = new Set();
 
 /* =========================================================
    RANK SYSTEM
@@ -464,7 +524,18 @@ const taskPool = [
     {name:"🎓 تعلم مهارة جديدة",stat:"MP",exp:60,gold:30},
     {name:"🧹 أنجز مهمة مؤجلة",stat:"ATK",exp:40,gold:20},
     {name:"📖 اقرأ لمدة 20 دقيقة",stat:"MP",exp:40,gold:20},
-    {name:"🌿 خذ استراحة قصيرة",stat:"HP",exp:25,gold:10}
+    {name:"🌿 خذ استراحة قصيرة",stat:"HP",exp:25,gold:10},
+    {name:"🏃 المشي لمدة 30 دقيقة",stat:"STM",exp:55,gold:25},
+    {name:"🚶 المشي لمدة ساعة",stat:"STM",exp:90,gold:45},
+    {name:"💪 أنجز 20 تمرين ضغط",stat:"ATK",exp:55,gold:25},
+    {name:"💪 أنجز 50 تمرين ضغط",stat:"ATK",exp:90,gold:45},
+    {name:"🦵 أنجز 30 Squats",stat:"STM",exp:60,gold:30},
+    {name:"🦵 أنجز 50 Squats",stat:"STM",exp:85,gold:40},
+    {name:"🔥 Plank لمدة دقيقة",stat:"STM",exp:50,gold:25},
+    {name:"🏃 تمارين كارديو لمدة 20 دقيقة",stat:"STM",exp:65,gold:30},
+    {name:"🤸 تمارين إطالة لمدة 15 دقيقة",stat:"HP",exp:45,gold:20},
+    {name:"⚽ مارس رياضة تحبها لمدة 30 دقيقة",stat:"ATK",exp:70,gold:35},
+    {name:"🥊 تمرين ملاكمة/Shadow Boxing لمدة 15 دقيقة",stat:"ATK",exp:60,gold:30}
 ];
 
 /* =========================================================
@@ -496,7 +567,13 @@ const achievements = [
     {id:"level50",name:"MONARCH",description:"الوصول إلى Level 50",reward:1000,condition:p=>p.level>=50},
     {id:"gold",name:"TREASURE",description:"اجمع 1000 Gold",reward:250,condition:p=>p.totalGold>=1000},
     {id:"stats",name:"POWER",description:"الوصول إلى مجموع Stats = 20",reward:300,
-        condition:p=>p.stats.HP+p.stats.ATK+p.stats.STM+p.stats.MP>=20}
+        condition:p=>p.stats.HP+p.stats.ATK+p.stats.STM+p.stats.MP>=20},
+    {id:"fitness10",name:"FITNESS INITIATE",description:"أكمل 10 مهام رياضية",reward:150,condition:p=>(p.fitnessCompleted||0)>=10},
+    {id:"fitness50",name:"IRON BODY",description:"أكمل 50 مهمة رياضية",reward:500,condition:p=>(p.fitnessCompleted||0)>=50},
+    {id:"arena1",name:"FIRST DUEL",description:"خض أول مباراة في الـ Arena",reward:100,condition:p=>(p.arenaWins||0)+(p.arenaLosses||0)>=1},
+    {id:"arena10",name:"ARENA WARRIOR",description:"اربح 10 مباريات Arena",reward:500,condition:p=>(p.arenaWins||0)>=10},
+    {id:"arena50",name:"ARENA LEGEND",description:"اربح 50 مباراة Arena",reward:1500,condition:p=>(p.arenaWins||0)>=50},
+    {id:"rich",name:"GOLD HUNTER",description:"امتلك 5000 Gold إجماليًا",reward:750,condition:p=>p.totalGold>=5000}
 ];
 
 /* =========================================================
@@ -509,15 +586,32 @@ function getDateKey(date = new Date()){
 /* =========================================================
    DEFAULT PLAYER
 ========================================================= */
-function createDefaultPlayer(username){
+function generatePlayerId(){
+
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let result = "SHD-";
+
+    for(let i = 0; i < 6; i++){
+        result += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    return result;
+}
+ function createDefaultPlayer(username){
     return {
         username: username || "",
         name: "",
         age: null,
         weight: null,
         height: null,
-
+        playerId: generatePlayerId(),
         setupComplete: false,
+
+        fitnessCompleted: 0,
+        arenaWins: 0,
+        arenaLosses: 0,
+        arenaDraws: 0,
 
         avatar: "",
 
@@ -783,6 +877,14 @@ function normalizePlayer(raw, username){
         normalized.height <= 250;
 
     normalized.setupComplete = validSetup;
+
+    if(!normalized.playerId){
+        normalized.playerId = generatePlayerId();
+    }
+    if(typeof normalized.fitnessCompleted !== "number") normalized.fitnessCompleted = 0;
+    if(typeof normalized.arenaWins !== "number") normalized.arenaWins = 0;
+    if(typeof normalized.arenaLosses !== "number") normalized.arenaLosses = 0;
+    if(typeof normalized.arenaDraws !== "number") normalized.arenaDraws = 0;
 
     return normalized;
 }
@@ -1140,6 +1242,7 @@ function generateTaskArray(){
         stat:task.stat,
         exp:task.exp,
         gold:task.gold,
+        fitness:task.name.match(/المشي|ضغط|Squats|Plank|كارديو|إطالة|رياضة|ملاكمة|Shadow Boxing/i) ? true : false,
         done:false
     }));
 }
@@ -1155,6 +1258,9 @@ function completeTask(index){
 
     task.done=true;
     player.completedTotal++;
+    if(task.fitness){
+        player.fitnessCompleted=(player.fitnessCompleted||0)+1;
+    }
     player.completedDates[getDateKey()]=true;
     player.gold+=task.gold;
     player.totalGold+=task.gold;
@@ -1287,6 +1393,8 @@ function updateUI(){
     avatar.src=player.avatar || createAvatarPlaceholder();
 
     document.getElementById("sound").textContent=soundEnabled?"ON":"OFF";
+    const arenaIdEl=document.getElementById("arena-player-id");
+    if(arenaIdEl) arenaIdEl.textContent=player.playerId || "---";
 
     renderQuests();
     renderPenalties();
@@ -1748,6 +1856,10 @@ function showPage(pageId, button){
         button.classList.add("active");
     }
 
+    if(pageId === "arena"){
+        renderArena();
+    }
+
     if(pageId === "calendar-page"){
         renderCalendar();
     }
@@ -1765,6 +1877,245 @@ function showPage(pageId, button){
     }
 }
     
+/* =========================================================
+   ARENA — 1 VS 1
+   Requires Supabase table: arena_matches (SQL supplied separately).
+========================================================= */
+function arenaStatsSnapshot(){
+    return {
+        HP:Number(player.stats.HP)||1,
+        ATK:Number(player.stats.ATK)||1,
+        STM:Number(player.stats.STM)||1,
+        MP:Number(player.stats.MP)||1,
+        level:Number(player.level)||1,
+        rank:getRank()
+    };
+}
+
+function arenaPower(stats){
+    return stats.HP*1.0 + stats.ATK*1.5 + stats.STM*1.2 + stats.MP*0.8 + stats.level*2;
+}
+
+function renderArena(){
+    if(!player) return;
+    const id=document.getElementById("arena-player-id");
+    if(id) id.textContent=player.playerId || "---";
+    if(activeArenaMatch) updateArenaBattleUI(activeArenaMatch);
+}
+
+async function copyPlayerId(){
+    if(!player?.playerId) return;
+    try{
+        await navigator.clipboard.writeText(player.playerId);
+        toast("📋 تم نسخ Player ID","gold");
+    }catch(e){ toast("ID: "+player.playerId,"gold"); }
+}
+
+function setArenaMessage(message,type=""){
+    const el=document.getElementById("arena-message");
+    if(!el) return;
+    el.className="auth-message "+type;
+    el.textContent=message;
+}
+
+function showArenaBattle(){
+    document.getElementById("arena-battle-panel")?.classList.remove("hidden");
+}
+
+function validateWager(){
+    const value=Math.floor(Number(document.getElementById("arena-wager")?.value));
+    if(!Number.isFinite(value) || value<25){
+        setArenaMessage("❌ الحد الأدنى للرهان هو 25 Gold","danger");
+        return null;
+    }
+    if(player.gold<value){
+        setArenaMessage(`❌ تحتاج إلى ${value} Gold للعب. لديك ${player.gold}.`,"danger");
+        return null;
+    }
+    return value;
+}
+
+async function createArenaMatch(){
+    if(!player?.setupComplete || !currentUser) return;
+    const wager=validateWager();
+    if(wager===null) return;
+    const opponentId=document.getElementById("arena-opponent-id")?.value.trim().toUpperCase();
+    if(!opponentId){
+        setArenaMessage("❌ أدخل Player ID الخاص بصديقك","danger");
+        return;
+    }
+    if(opponentId===player.playerId){
+        setArenaMessage("❌ لا يمكنك تحدي نفسك","danger");
+        return;
+    }
+    try{
+        const {data,error}=await db.from("arena_matches").insert({
+            invite_code:opponentId,
+            player1_user_id:currentUser,
+            player1_player_id:player.playerId,
+            player1_name:player.name,
+            player1_stats:arenaStatsSnapshot(),
+            wager:wager,
+            status:"waiting"
+        }).select().single();
+        if(error) throw error;
+        player.gold-=wager;
+        activeArenaMatch=data;
+        await savePlayerNow();
+        showArenaBattle();
+        subscribeArena(data.id);
+        setArenaMessage("✓ تم إنشاء التحدي. أرسل Player ID لصديقك.","arena-success");
+        updateArenaBattleUI(data);
+        toast(`⚔️ تم حجز ${wager} Gold للمباراة`,"gold");
+    }catch(error){
+        console.error(error);
+        setArenaMessage("❌ تعذر إنشاء المباراة: "+error.message,"danger");
+    }
+}
+
+async function joinArenaMatch(){
+    if(!player?.setupComplete || !currentUser) return;
+    const wager=validateWager();
+    if(wager===null) return;
+    const opponentId=document.getElementById("arena-opponent-id")?.value.trim().toUpperCase();
+    if(!opponentId){
+        setArenaMessage("❌ أدخل Player ID الخاص بالخصم","danger");
+        return;
+    }
+    try{
+        const {data,error}=await db.from("arena_matches")
+            .select("*")
+            .eq("player1_player_id",opponentId)
+            .eq("status","waiting")
+            .order("created_at",{ascending:false})
+            .limit(1)
+            .maybeSingle();
+        if(error) throw error;
+        if(!data){
+            setArenaMessage("❌ لا توجد مباراة انتظار بهذا الـ ID","danger");
+            return;
+        }
+        if(Number(data.wager)!==wager){
+            setArenaMessage(`❌ رهان المباراة هو ${data.wager} Gold. استخدم نفس المبلغ.`,"danger");
+            return;
+        }
+        const {data:updated,error:updateError}=await db.from("arena_matches")
+            .update({
+                player2_user_id:currentUser,
+                player2_player_id:player.playerId,
+                player2_name:player.name,
+                player2_stats:arenaStatsSnapshot(),
+                status:"ready"
+            })
+            .eq("id",data.id)
+            .eq("status","waiting")
+            .select().single();
+        if(updateError) throw updateError;
+        player.gold-=wager;
+        activeArenaMatch=updated;
+        await savePlayerNow();
+        showArenaBattle();
+        subscribeArena(updated.id);
+        setArenaMessage("✓ انضممت إلى المباراة. تبدأ المعركة الآن.","arena-success");
+        updateArenaBattleUI(updated);
+        await runArenaBattle(updated);
+    }catch(error){
+        console.error(error);
+        setArenaMessage("❌ تعذر الانضمام: "+error.message,"danger");
+    }
+}
+
+function subscribeArena(matchId){
+    if(arenaChannel) db.removeChannel(arenaChannel);
+    arenaChannel=db.channel("arena-match-"+matchId)
+        .on("postgres_changes",{event:"UPDATE",schema:"public",table:"arena_matches",filter:"id=eq."+matchId},payload=>{
+            activeArenaMatch=payload.new;
+            updateArenaBattleUI(activeArenaMatch);
+            if(activeArenaMatch.status==="finished") finishArenaLocal(activeArenaMatch);
+        })
+        .subscribe();
+}
+
+function updateArenaBattleUI(match){
+    if(!match) return;
+    const me=match.player1_user_id===currentUser ? {
+        name:match.player1_name,stats:match.player1_stats
+    } : {name:match.player2_name,stats:match.player2_stats};
+    const opp=match.player1_user_id===currentUser ? {
+        name:match.player2_name,stats:match.player2_stats
+    } : {name:match.player1_name,stats:match.player1_stats};
+    document.getElementById("fighter-me-name").textContent=me.name||"YOU";
+    document.getElementById("fighter-opponent-name").textContent=opp.name||"WAITING...";
+    const fmt=s=>s?`❤️ ${s.HP}  ⚔️ ${s.ATK}  🟢 ${s.STM}  🔮 ${s.MP}  • LV ${s.level}`:"---";
+    document.getElementById("fighter-me-stats").textContent=fmt(me.stats);
+    document.getElementById("fighter-opponent-stats").textContent=fmt(opp.stats);
+    document.getElementById("arena-status").textContent=match.status==="waiting"?"⏳ في انتظار الخصم...":match.status==="ready"?"🔥 جاهز للقتال!":"🏁 انتهت المباراة";
+}
+
+async function runArenaBattle(match){
+    if(!match || match.status!=="ready") return;
+    if(match.battle_started_at) return;
+    const patch={battle_started_at:new Date().toISOString(),status:"battle"};
+    const {data,error}=await db.from("arena_matches").update(patch).eq("id",match.id).eq("status","ready").select().single();
+    if(error) return console.error(error);
+    activeArenaMatch=data;
+    updateArenaBattleUI(data);
+    animateBattle();
+    setTimeout(()=>resolveArenaBattle(data),1100);
+}
+
+function animateBattle(){
+    const me=document.getElementById("fighter-me");
+    const op=document.getElementById("fighter-opponent");
+    me.classList.remove("attack","hit");op.classList.remove("attack","hit");
+    void me.offsetWidth; void op.offsetWidth;
+    me.classList.add("attack");op.classList.add("hit");
+    playSound("level");
+    setTimeout(()=>{op.classList.remove("hit");me.classList.remove("attack");op.classList.add("attack");me.classList.add("hit");},450);
+}
+
+async function resolveArenaBattle(match){
+    if(!match || match.status!=="battle") return;
+    // NOTE: for a production system this calculation should be moved to a trusted server/RPC.
+    const p1=arenaPower(match.player1_stats||{});
+    const p2=arenaPower(match.player2_stats||{});
+    const winner=Math.abs(p1-p2)<0.01 ? null : (p1>p2?match.player1_user_id:match.player2_user_id);
+    const result=winner===null?"draw":"finished";
+    const {data,error}=await db.from("arena_matches").update({status:result,winner_user_id:winner}).eq("id",match.id).eq("status","battle").select().single();
+    if(error){console.error(error);return;}
+    activeArenaMatch=data;
+    await finishArenaLocal(data);
+}
+
+async function finishArenaLocal(match){
+    if(!match || !player) return;
+    if(arenaSettledMatches.has(match.id)) return;
+    arenaSettledMatches.add(match.id);
+    const log=document.getElementById("battle-log");
+    if(match.status==="draw"){
+        player.gold+=Number(match.wager||0);
+        player.arenaDraws=(player.arenaDraws||0)+1;
+        log.textContent=`🤝 تعادل — تمت إعادة ${match.wager} Gold.`;
+    }else{
+        const won=match.winner_user_id===currentUser;
+        if(won){
+            player.gold+=Number(match.wager||0)*2;
+            player.totalGold+=Number(match.wager||0);
+            player.arenaWins=(player.arenaWins||0)+1;
+            gainExp(50);
+            log.textContent=`🏆 VICTORY! ربحت ${Number(match.wager||0)*2} Gold.`;
+            toast(`🏆 فوز في Arena +${Number(match.wager||0)} Gold صافي`,"gold");
+        }else{
+            player.arenaLosses=(player.arenaLosses||0)+1;
+            log.textContent=`💀 DEFEAT — خسرت رهان ${match.wager} Gold.`;
+            toast("💀 خسرت مباراة Arena","danger");
+        }
+    }
+    checkAchievements();
+    await savePlayerNow();
+    updateUI();
+}
+
 /* =========================================================
    TOAST
 ========================================================= */
