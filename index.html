@@ -174,6 +174,17 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 @keyframes vsPulse{50%{transform:scale(1.12);opacity:.7}}
 @media(max-width:700px){.arena-grid{grid-template-columns:1fr}.fighters{grid-template-columns:1fr}.vs{font-size:30px}}
 
+
+/* ================= NEW STATS / NOTIFICATIONS ================= */
+.stats{grid-template-columns:repeat(4,1fr)}
+.notification-bell{position:relative;padding:8px 11px;color:#65caff;background:#071a2a;border:1px solid #245675}
+.notification-badge{position:absolute;top:-6px;left:-6px;min-width:18px;height:18px;padding:1px 5px;border-radius:10px;background:#ff4967;color:#fff;font-size:11px;font-weight:900;text-align:center}
+.system-notification{padding:12px;margin-bottom:8px;background:#061321;border:1px solid #1b4968}
+.system-notification.unread{border-color:#25b5ff;box-shadow:0 0 12px #008cff18}
+.system-notification small{display:block;color:#638097;margin-top:5px}
+.push-status{padding:10px;margin-bottom:10px;color:#8fb0c4;background:#061321;border:1px solid #183d58}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
+
 @media(max-width:900px){
     .stats{grid-template-columns:repeat(2,1fr)}.shop{grid-template-columns:repeat(3,1fr)}
     .achievements{grid-template-columns:repeat(2,1fr)}
@@ -225,6 +236,7 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
     <div class="header">
         <div class="brand">SHADOW SYSTEM</div>
         <div class="header-right">
+            <button class="notification-bell" onclick="showNotifications()">🔔<span id="notification-badge" class="notification-badge hidden">0</span></button>
             <div class="gold-display">💰 <span id="gold">0</span></div>
             <button class="logout" onclick="logout()">خروج</button>
         </div>
@@ -365,6 +377,12 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
             <div class="stat"><div class="stat-name">⚔️ ATK</div><div id="atk" class="stat-value">1</div><button onclick="addStat('ATK')">+</button></div>
             <div class="stat"><div class="stat-name">🟢 STM</div><div id="stm" class="stat-value">1</div><button onclick="addStat('STM')">+</button></div>
             <div class="stat"><div class="stat-name">🔮 MP</div><div id="mp" class="stat-value">1</div><button onclick="addStat('MP')">+</button></div>
+            <div class="stat"><div class="stat-name">🛡️ DF</div><div id="df" class="stat-value">1</div><button onclick="addStat('DF')">+</button></div>
+            <div class="stat"><div class="stat-name">⚡ SPD</div><div id="spd" class="stat-value">1</div><button onclick="addStat('SPD')">+</button></div>
+            <div class="stat"><div class="stat-name">☠️ PSN</div><div id="psn" class="stat-value">1%</div><button onclick="addStat('PSN')">+</button></div>
+            <div class="stat"><div class="stat-name">🧪 P-RES</div><div id="pres" class="stat-value">1%</div><button onclick="addStat('PRES')">+</button></div>
+            <div class="stat"><div class="stat-name">🎯 CRIT</div><div id="crit" class="stat-value">1%</div><button onclick="addStat('CRIT')">+</button></div>
+            <div class="stat"><div class="stat-name">💚 REC</div><div id="rec" class="stat-value">1%</div><button onclick="addStat('REC')">+</button></div>
         </div>
     </div>
 </section>
@@ -387,6 +405,14 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 
 <section id="achievements" class="page hidden">
     <div class="panel"><div class="title">ACHIEVEMENTS</div><div id="achievement-grid" class="achievements"></div></div>
+</section>
+
+<section id="notifications" class="page hidden">
+    <div class="panel">
+        <div class="title">🔔 SYSTEM NOTIFICATIONS</div>
+        <div id="notifications-list"></div>
+        <button class="setting" onclick="markAllNotificationsRead()">✓ تعليم الكل كمقروء</button>
+    </div>
 </section>
 
 <section id="settings" class="page hidden">
@@ -418,6 +444,11 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 
         <button class="setting" onclick="toggleSound()">
             🔊 الصوت: <span id="sound">ON</span>
+        </button>
+
+        <div id="push-status" class="push-status">🔔 إشعارات الهاتف/المتصفح: غير مفعلة</div>
+        <button class="setting" onclick="enablePushNotifications()">
+            📲 تفعيل إشعارات الجهاز
         </button>
 
         <button class="setting" onclick="exportSave()">
@@ -535,7 +566,15 @@ const taskPool = [
     {name:"🏃 تمارين كارديو لمدة 20 دقيقة",stat:"STM",exp:65,gold:30},
     {name:"🤸 تمارين إطالة لمدة 15 دقيقة",stat:"HP",exp:45,gold:20},
     {name:"⚽ مارس رياضة تحبها لمدة 30 دقيقة",stat:"ATK",exp:70,gold:35},
-    {name:"🥊 تمرين ملاكمة/Shadow Boxing لمدة 15 دقيقة",stat:"ATK",exp:60,gold:30}
+    {name:"🥊 تمرين ملاكمة/Shadow Boxing لمدة 15 دقيقة",stat:"ATK",exp:60,gold:30},
+    {name:"🏃 الجري لمدة 20 دقيقة",stat:"STM",exp:70,gold:35},
+    {name:"💪 أنجز 30 تمرين ضغط",stat:"ATK",exp:70,gold:35},
+    {name:"🦵 أنجز 20 Lunges",stat:"STM",exp:55,gold:25},
+    {name:"🔥 Plank لمدة دقيقتين",stat:"STM",exp:75,gold:35},
+    {name:"🚴 ركوب الدراجة لمدة 30 دقيقة",stat:"STM",exp:70,gold:35},
+    {name:"🏊 السباحة لمدة 30 دقيقة",stat:"HP",exp:80,gold:40},
+    {name:"🥊 تمرين Shadow Boxing لمدة 30 دقيقة",stat:"ATK",exp:85,gold:40},
+    {name:"🏋️ تمرين مقاومة لمدة 30 دقيقة",stat:"ATK",exp:80,gold:40}
 ];
 
 /* =========================================================
@@ -551,7 +590,15 @@ const shopItems = [
     {icon:"🍀",name:"Lucky Charm",description:"عنصر حظ",price:500,type:"lucky"},
     {icon:"📜",name:"Shadow Scroll",description:"+200 EXP",price:700,type:"exp",value:200},
     {icon:"💎",name:"Shadow Core",description:"+1 Stat Point",price:800,type:"points",value:1},
-    {icon:"👑",name:"Royal Core",description:"+3 Stat Points",price:1500,type:"points",value:3}
+    {icon:"👑",name:"Royal Core",description:"+3 Stat Points",price:1500,type:"points",value:3},
+    {icon:"🛡️",name:"Iron Shield",description:"+2 DF",price:500,type:"stat",stat:"DF"},
+    {icon:"⚡",name:"Swift Core",description:"+2 SPD",price:600,type:"stat",stat:"SPD"},
+    {icon:"☠️",name:"Venom Fang",description:"+2% Poison Chance",price:650,type:"stat",stat:"PSN"},
+    {icon:"🧪",name:"Antidote Core",description:"+2% Poison Resistance",price:650,type:"stat",stat:"PRES"},
+    {icon:"🎯",name:"Critical Lens",description:"+2% Critical Chance",price:750,type:"stat",stat:"CRIT"},
+    {icon:"💚",name:"Recovery Cell",description:"+2% Recovery",price:700,type:"stat",stat:"REC"},
+    {icon:"⚔️",name:"Berserker Core",description:"+2 ATK و +1% CRIT",price:900,type:"multi",stats:{ATK:2,CRIT:1}},
+    {icon:"👻",name:"Shadow Elixir",description:"+1 SPD و +1% PSN و +1% CRIT",price:1100,type:"multi",stats:{SPD:1,PSN:1,CRIT:1}}
 ];
 
 /* =========================================================
@@ -573,7 +620,15 @@ const achievements = [
     {id:"arena1",name:"FIRST DUEL",description:"خض أول مباراة في الـ Arena",reward:100,condition:p=>(p.arenaWins||0)+(p.arenaLosses||0)>=1},
     {id:"arena10",name:"ARENA WARRIOR",description:"اربح 10 مباريات Arena",reward:500,condition:p=>(p.arenaWins||0)>=10},
     {id:"arena50",name:"ARENA LEGEND",description:"اربح 50 مباراة Arena",reward:1500,condition:p=>(p.arenaWins||0)>=50},
-    {id:"rich",name:"GOLD HUNTER",description:"امتلك 5000 Gold إجماليًا",reward:750,condition:p=>p.totalGold>=5000}
+    {id:"rich",name:"GOLD HUNTER",description:"امتلك 5000 Gold إجماليًا",reward:750,condition:p=>p.totalGold>=5000},
+    {id:"defender",name:"IRON WALL",description:"الوصول إلى DF = 10",reward:250,condition:p=>(p.stats.DF||0)>=10},
+    {id:"speedster",name:"SPEEDSTER",description:"الوصول إلى SPD = 10",reward:250,condition:p=>(p.stats.SPD||0)>=10},
+    {id:"venom",name:"TOXIC",description:"الوصول إلى Poison Chance = 10%",reward:300,condition:p=>(p.stats.PSN||0)>=10},
+    {id:"antidote",name:"IMMUNE",description:"الوصول إلى Poison Resistance = 10%",reward:300,condition:p=>(p.stats.PRES||0)>=10},
+    {id:"critical",name:"CRITICAL HUNTER",description:"الوصول إلى CRIT = 10%",reward:350,condition:p=>(p.stats.CRIT||0)>=10},
+    {id:"recovery",name:"SECOND WIND",description:"الوصول إلى REC = 10%",reward:350,condition:p=>(p.stats.REC||0)>=10},
+    {id:"fitness100",name:"BEAST MODE",description:"أكمل 100 مهمة رياضية",reward:1000,condition:p=>(p.fitnessCompleted||0)>=100},
+    {id:"arena25",name:"ARENA MASTER",description:"اربح 25 مباراة Arena",reward:1000,condition:p=>(p.arenaWins||0)>=25}
 ];
 
 /* =========================================================
@@ -627,7 +682,13 @@ function generatePlayerId(){
             HP: 1,
             ATK: 1,
             STM: 1,
-            MP: 1
+            MP: 1,
+            DF: 1,
+            SPD: 1,
+            PSN: 1,
+            PRES: 1,
+            CRIT: 1,
+            REC: 1
         },
 
         completedTotal: 0,
@@ -758,6 +819,8 @@ function normalizePlayer(raw, username){
             ...(p.stats || {})
         },
 
+        notifications: Array.isArray(p.notifications) ? p.notifications : [],
+
         completedDates: {
             ...(p.completedDates || {})
         },
@@ -885,6 +948,10 @@ function normalizePlayer(raw, username){
     if(typeof normalized.arenaWins !== "number") normalized.arenaWins = 0;
     if(typeof normalized.arenaLosses !== "number") normalized.arenaLosses = 0;
     if(typeof normalized.arenaDraws !== "number") normalized.arenaDraws = 0;
+    if(!Array.isArray(normalized.notifications)) normalized.notifications=[];
+    ["DF","SPD","PSN","PRES","CRIT","REC"].forEach(k=>{
+        if(typeof normalized.stats[k] !== "number" || normalized.stats[k] < 1) normalized.stats[k]=1;
+    });
 
     return normalized;
 }
@@ -1040,6 +1107,9 @@ function startApplication(){
     updateSetupVisibility();
     updateUI();
     renderCalendar();
+    renderNotifications();
+    updateNotificationBadge();
+    subscribeArenaInvites();
 
     if(!timerInterval) timerInterval=setInterval(updateTimer,1000);
     if(!dayInterval) dayInterval=setInterval(checkNewDay,60000);
@@ -1220,6 +1290,8 @@ async function checkNewDay(){
 
     player.tasks=generateTaskArray();
     player.lastReset=today;
+    addNotification("🎯 مهام جديدة متاحة","تم إصدار 5 مهام جديدة لهذا اليوم.");
+    browserNotify("SHADOW SYSTEM","🎯 المهام الجديدة متاحة الآن!");
 
     await savePlayerNow();
     updateUI();
@@ -1360,6 +1432,12 @@ function updateUI(){
     document.getElementById("atk").textContent=player.stats.ATK;
     document.getElementById("stm").textContent=player.stats.STM;
     document.getElementById("mp").textContent=player.stats.MP;
+    document.getElementById("df").textContent=player.stats.DF;
+    document.getElementById("spd").textContent=player.stats.SPD;
+    document.getElementById("psn").textContent=player.stats.PSN+"%";
+    document.getElementById("pres").textContent=player.stats.PRES+"%";
+    document.getElementById("crit").textContent=player.stats.CRIT+"%";
+    document.getElementById("rec").textContent=player.stats.REC+"%";
 
     document.getElementById("exp-bar").style.width=Math.min(100,(player.exp/expNeeded())*100)+"%";
 
@@ -1600,6 +1678,10 @@ function buyItem(index){
         player.stats[item.stat]++;
     }else if(item.type==="points"){
         player.statPoints+=item.value;
+    }else if(item.type==="multi"){
+        Object.entries(item.stats).forEach(([stat,value])=>{
+            player.stats[stat]=(player.stats[stat]||1)+value;
+        });
     }else{
         player.inventory.push(item.type);
     }
@@ -1856,6 +1938,8 @@ function showPage(pageId, button){
         button.classList.add("active");
     }
 
+    if(pageId === "notifications"){ renderNotifications(); }
+
     if(pageId === "arena"){
         renderArena();
     }
@@ -1877,23 +1961,59 @@ function showPage(pageId, button){
     }
 }
     
+
+async function subscribeArenaInvites(){
+    if(!currentUser || !player?.playerId) return;
+    const ch=db.channel("arena-invites-"+player.playerId)
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"arena_matches",filter:"invite_code=eq."+player.playerId},payload=>{
+          const m=payload.new;
+          if(m.player1_user_id===currentUser) return;
+          const msg=`${m.player1_name||"لاعب"} يريد نزالك. الرهان: ${m.wager} Gold`;
+          addNotification("⚔️ لاعب يريد نزالك",msg,"arena");
+          browserNotify("⚔️ CHALLENGE INCOMING",msg);
+          showArenaInviteNotification(m);
+      }).subscribe();
+}
+function showArenaInviteNotification(m){
+    const box=document.getElementById("arena-notification-box");
+    if(!box)return;
+    document.getElementById("arena-notification-text").textContent=`${m.player1_name||"لاعب"} يريد نزالك.`;
+    document.getElementById("arena-notification-bet").textContent=m.wager||0;
+    box.classList.remove("hidden");
+    window.pendingArenaInvite=m;
+}
+function closeArenaNotification(){document.getElementById("arena-notification-box")?.classList.add("hidden");}
+function acceptArenaInvite(){
+    const m=window.pendingArenaInvite;
+    closeArenaNotification();
+    if(!m)return;
+    document.getElementById("arena-opponent-id").value=m.player1_player_id||"";
+    document.getElementById("arena-wager").value=m.wager||25;
+    showPage("arena",null);
+    joinArenaMatch();
+}
+function rejectArenaInvite(){
+    closeArenaNotification();
+    window.pendingArenaInvite=null;
+}
+
 /* =========================================================
    ARENA — 1 VS 1
    Requires Supabase table: arena_matches (SQL supplied separately).
 ========================================================= */
 function arenaStatsSnapshot(){
     return {
-        HP:Number(player.stats.HP)||1,
-        ATK:Number(player.stats.ATK)||1,
-        STM:Number(player.stats.STM)||1,
-        MP:Number(player.stats.MP)||1,
-        level:Number(player.level)||1,
-        rank:getRank()
+        HP:Number(player.stats.HP)||1, ATK:Number(player.stats.ATK)||1,
+        STM:Number(player.stats.STM)||1, MP:Number(player.stats.MP)||1,
+        DF:Number(player.stats.DF)||1, SPD:Number(player.stats.SPD)||1,
+        PSN:Number(player.stats.PSN)||1, PRES:Number(player.stats.PRES)||1,
+        CRIT:Number(player.stats.CRIT)||1, REC:Number(player.stats.REC)||1,
+        level:Number(player.level)||1, rank:getRank()
     };
 }
 
 function arenaPower(stats){
-    return stats.HP*1.0 + stats.ATK*1.5 + stats.STM*1.2 + stats.MP*0.8 + stats.level*2;
+    return stats.HP*1.0 + stats.ATK*1.5 + stats.STM*1.2 + stats.MP*0.8 + stats.DF*1.4 + stats.SPD*1.1 + stats.PSN*0.7 + stats.PRES*0.7 + stats.CRIT*1.2 + stats.REC*0.8 + stats.level*2;
 }
 
 function renderArena(){
@@ -2046,7 +2166,7 @@ function updateArenaBattleUI(match){
     } : {name:match.player1_name,stats:match.player1_stats};
     document.getElementById("fighter-me-name").textContent=me.name||"YOU";
     document.getElementById("fighter-opponent-name").textContent=opp.name||"WAITING...";
-    const fmt=s=>s?`❤️ ${s.HP}  ⚔️ ${s.ATK}  🟢 ${s.STM}  🔮 ${s.MP}  • LV ${s.level}`:"---";
+    const fmt=s=>s?`❤️ ${s.HP} ⚔️ ${s.ATK} 🟢 ${s.STM} 🔮 ${s.MP} 🛡️ ${s.DF||1} ⚡ ${s.SPD||1} ☠️ ${s.PSN||1}% 🎯 ${s.CRIT||1}% • LV ${s.level}`:"---";
     document.getElementById("fighter-me-stats").textContent=fmt(me.stats);
     document.getElementById("fighter-opponent-stats").textContent=fmt(opp.stats);
     document.getElementById("arena-status").textContent=match.status==="waiting"?"⏳ في انتظار الخصم...":match.status==="ready"?"🔥 جاهز للقتال!":"🏁 انتهت المباراة";
@@ -2077,13 +2197,22 @@ function animateBattle(){
 async function resolveArenaBattle(match){
     if(!match || match.status!=="battle") return;
     // NOTE: for a production system this calculation should be moved to a trusted server/RPC.
-    const p1=arenaPower(match.player1_stats||{});
-    const p2=arenaPower(match.player2_stats||{});
-    const winner=Math.abs(p1-p2)<0.01 ? null : (p1>p2?match.player1_user_id:match.player2_user_id);
-    const result=winner===null?"draw":"finished";
+    const a=match.player1_stats||{}, b=match.player2_stats||{};
+    const p1=arenaPower(a), p2=arenaPower(b);
+    const total=Math.max(1,p1+p2);
+    let winner=Math.random() < (p1/total) ? match.player1_user_id : match.player2_user_id;
+    const crit1=Math.random() < ((a.CRIT||1)/100);
+    const crit2=Math.random() < ((b.CRIT||1)/100);
+    const poison1=Math.random() < ((a.PSN||1)/100) && Math.random() >= ((b.PRES||1)/100);
+    const poison2=Math.random() < ((b.PSN||1)/100) && Math.random() >= ((a.PRES||1)/100);
+    if(crit1 && !crit2) winner=match.player1_user_id;
+    if(crit2 && !crit1) winner=match.player2_user_id;
+    const result="finished";
+    const battleNote=`${crit1||crit2?"🎯 Critical! ":""}${poison1||poison2?"☠️ Poison! ":""}`;
     const {data,error}=await db.from("arena_matches").update({status:result,winner_user_id:winner}).eq("id",match.id).eq("status","battle").select().single();
     if(error){console.error(error);return;}
     activeArenaMatch=data;
+    document.getElementById("battle-log").textContent=battleNote+`Winner: ${winner===match.player1_user_id?match.player1_name:match.player2_name}`;
     await finishArenaLocal(data);
 }
 
@@ -2105,15 +2234,70 @@ async function finishArenaLocal(match){
             gainExp(50);
             log.textContent=`🏆 VICTORY! ربحت ${Number(match.wager||0)*2} Gold.`;
             toast(`🏆 فوز في Arena +${Number(match.wager||0)} Gold صافي`,"gold");
+            addNotification("🏆 فوز في Arena",`لقد ربحت ${Number(match.wager||0)} Gold صافي.`);
         }else{
             player.arenaLosses=(player.arenaLosses||0)+1;
             log.textContent=`💀 DEFEAT — خسرت رهان ${match.wager} Gold.`;
             toast("💀 خسرت مباراة Arena","danger");
+            addNotification("💀 خسارة في Arena",`خسرت رهان ${Number(match.wager||0)} Gold.`);
         }
     }
     checkAchievements();
     await savePlayerNow();
     updateUI();
+}
+
+/* =========================================================
+   NOTIFICATIONS
+========================================================= */
+function addNotification(title,message,type="system"){
+    if(!player) return;
+    player.notifications=Array.isArray(player.notifications)?player.notifications:[];
+    player.notifications.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),title,message,type,read:false,createdAt:new Date().toISOString()});
+    player.notifications=player.notifications.slice(0,50);
+    renderNotifications();
+    updateNotificationBadge();
+    savePlayer();
+}
+function updateNotificationBadge(){
+    const unread=(player?.notifications||[]).filter(n=>!n.read).length;
+    const badge=document.getElementById("notification-badge");
+    if(badge){badge.textContent=unread;badge.classList.toggle("hidden",unread===0);}
+}
+function renderNotifications(){
+    const box=document.getElementById("notifications-list");
+    if(!box) return;
+    const items=player?.notifications||[];
+    box.innerHTML=items.length?items.map(n=>`<div class="system-notification ${n.read?"":"unread"}" onclick="markNotificationRead('${n.id}')"><b>${escapeHtml(n.title)}</b><div>${escapeHtml(n.message)}</div><small>${new Date(n.createdAt).toLocaleString(navigator.language)}</small></div>`).join(""):`<div class="push-status">لا توجد إشعارات.</div>`;
+}
+function markNotificationRead(id){
+    const n=(player?.notifications||[]).find(x=>x.id===id);
+    if(n)n.read=true;
+    renderNotifications(); updateNotificationBadge(); savePlayer();
+}
+function markAllNotificationsRead(){
+    (player?.notifications||[]).forEach(n=>n.read=true);
+    renderNotifications(); updateNotificationBadge(); savePlayer();
+}
+function showNotifications(){
+    showPage("notifications",null);
+    renderNotifications();
+    markAllNotificationsRead();
+}
+async function enablePushNotifications(){
+    if(!("Notification" in window)){toast("هذا المتصفح لا يدعم إشعارات النظام","danger");return;}
+    try{
+        const permission=await Notification.requestPermission();
+        if(permission!=="granted"){toast("لم يتم السماح بالإشعارات","danger");return;}
+        if("serviceWorker" in navigator){
+            await navigator.serviceWorker.register("service-worker.js");
+        }
+        document.getElementById("push-status").textContent="🔔 إشعارات الجهاز مفعلة. إشعارات Push عند إغلاق التطبيق تحتاج خادم إرسال Push.";
+        toast("📲 تم تفعيل إشعارات الجهاز","gold");
+    }catch(e){console.error(e);toast("تعذر تفعيل الإشعارات: "+e.message,"danger");}
+}
+function browserNotify(title,message){
+    if("Notification" in window && Notification.permission==="granted") new Notification(title,{body:message,icon:"favicon.png",badge:"favicon.png"});
 }
 
 /* =========================================================
