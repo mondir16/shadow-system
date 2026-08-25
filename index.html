@@ -1929,12 +1929,14 @@ function importSave(event){
    SECURITY NOTE: real global/one-time redemption must be enforced by Supabase.
 ========================================================= */
 const UNIVERSAL_REDEEM_CODES = {
-    "150-000-123": {type:"GOLD", value:150},
-    "120-666-124": {type:"LEVEL", value:1},
-    "160-454-189": {type:"STATS", value:3}
+    "150-000-123": {type:"GOLD", value:600},
+    "120-666-124": {type:"LEVEL", value:2},
+    "160-454-189": {type:"STATS", value:5}
 };
 const SINGLE_USE_REDEEM_CODES = {
-    "999-999-999": {type:"GOLD", value:1000}
+    "999-999-999": {type:"GOLD", value:1200}
+    "666-666-666": {type:"LEVEL", value:5}
+    "999-666-999": {type:"STATS", value:10}
 };
 async function redeemCode(){
     const input=document.getElementById("redeem-code");
