@@ -175,6 +175,9 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
 @media(max-width:700px){.arena-grid{grid-template-columns:1fr}.fighters{grid-template-columns:1fr}.vs{font-size:30px}}
 
 
+
+.arena-dice{display:flex;justify-content:center;gap:12px;margin:15px 0}.die{width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;background:#071a2a;border:1px solid #2bb8ff;box-shadow:0 0 15px #008cff22}.die.roll{animation:diceRoll .65s ease}.initiative{padding:10px;text-align:center;color:#ffd65d;background:#071a2a;border:1px solid #6b5520}.battle-round{margin-top:10px;padding:10px;background:#020914;border:1px solid #15374f;white-space:pre-line}@keyframes diceRoll{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-18deg) scale(1.15)}50%{transform:rotate(18deg) scale(.85)}75%{transform:rotate(-8deg) scale(1.1)}}
+
 /* ================= NEW STATS / NOTIFICATIONS ================= */
 .stats{grid-template-columns:repeat(4,1fr)}
 .notification-bell{position:relative;padding:8px 11px;color:#65caff;background:#071a2a;border:1px solid #245675}
@@ -348,7 +351,8 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
                     <input id="arena-opponent-id" class="input" placeholder="Player ID: SHD-XXXXXX">
                     <input id="arena-wager" class="input" type="number" min="25" step="1" placeholder="الرهان — الحد الأدنى 25 Gold">
                     <button class="primary" onclick="createArenaMatch()">⚔️ إنشاء مباراة</button>
-                    <button class="setting" onclick="joinArenaMatch()">🚪 الانضمام بواسطة ID</button>
+                    <button class="setting" onclick="joinArenaMatch()">🚪 الانضمام بواسطة ID فقط</button>
+                    <div style="color:#66859c;font-size:12px;text-align:center">عند الانضمام لا تحتاج لإدخال الرهان؛ سيتم استخدام رهان صاحب المباراة.</div>
                 </div>
                 <div id="arena-message" class="auth-message"></div>
             </div>
@@ -363,6 +367,8 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
                 <div id="fighter-opponent" class="fighter"><div id="fighter-opponent-name" class="fighter-name">OPPONENT</div><div id="fighter-opponent-stats" class="fighter-stats">---</div></div>
             </div>
             <div id="arena-status" class="arena-status">في انتظار اللاعب الآخر...</div>
+            <div class="arena-dice"><div><div style="font-size:11px;color:#66859c">🎲 YOU</div><div style="display:flex;gap:8px"><span id="die-me-1" class="die">?</span><span id="die-me-2" class="die">?</span></div></div><div><div style="font-size:11px;color:#66859c">🎲 OPPONENT</div><div style="display:flex;gap:8px"><span id="die-op-1" class="die">?</span><span id="die-op-2" class="die">?</span></div></div></div>
+            <div id="initiative-result" class="initiative">🎲 سيتم رمي النرد للاعبين في نفس الوقت</div>
             <div id="battle-log" class="battle-log">أدخل Player ID وأنشئ/انضم إلى مباراة.</div>
         </div>
     </div>
@@ -451,6 +457,13 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
             📲 تفعيل إشعارات الجهاز
         </button>
 
+        <div class="panel" style="margin-top:10px">
+            <div class="title">🎁 REDEEM CODE</div>
+            <input id="redeem-code" class="input" placeholder="مثال: 150-000-123">
+            <button class="primary" onclick="redeemCode()">🎁 استخدام الكود</button>
+            <div style="margin-top:8px;color:#66859c;font-size:12px">كل كود يمكن استخدامه مرة واحدة حسب نوعه.</div>
+        </div>
+
         <button class="setting" onclick="exportSave()">
             📤 تصدير نسخة احتياطية
         </button>
@@ -471,32 +484,27 @@ main{max-width:1350px;margin:auto;padding:20px 15px 70px}
     <!-- SYSTEM INFORMATION -->
 <div class="panel">
     <div class="title">SYSTEM INFORMATION</div>
-
-    <div style="
-        text-align:center;
-        padding:18px;
-        color:#5bcaff;
-        font-size:14px;
-        font-weight:900;
-        letter-spacing:2px;
-        text-shadow:0 0 10px #008cff;
-        line-height:2;
-    ">
+    <div style="text-align:center;padding:18px;color:#5bcaff;font-size:14px;font-weight:900;letter-spacing:2px;text-shadow:0 0 10px #008cff;line-height:2;">
         <div>BY: MONDIR</div>
-        <div style="
-            color:#66859c;
-            font-size:12px;
-            font-weight:normal;
-            letter-spacing:1px;
-            text-shadow:none;
-        ">
-            VERSION: 2.0.0
-        </div>
+        <div style="color:#66859c;font-size:12px;font-weight:normal;letter-spacing:1px;text-shadow:none;">VERSION: 3.20.4</div>
     </div>
 </div>
-
 </section>
 </main>
+</div>
+
+<div id="arena-invite-modal" class="hidden" style="position:fixed;inset:0;z-index:11000;background:rgba(0,4,10,.82);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px;">
+  <div class="panel" style="width:100%;max-width:520px;max-height:90vh;overflow:auto;border-color:#27b8ff;box-shadow:0 0 40px #008cff33;">
+    <div class="title">⚔️ تحدي Arena جديد</div>
+    <div style="text-align:center;margin-bottom:15px;color:#66859c">لاعب يريد بدء مباراة 1 VS 1 معك</div>
+    <div class="info-card" style="text-align:center;margin-bottom:10px"><small>الخصم</small><strong id="invite-opponent-name">---</strong></div>
+    <div id="invite-opponent-stats" class="info-card" style="line-height:2;margin-bottom:10px">---</div>
+    <div class="info-card" style="text-align:center;margin-bottom:16px"><small>الرهان</small><strong style="color:#ffd65d">💰 <span id="invite-wager">0</span> Gold</strong></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="primary" onclick="acceptArenaInvite()">✅ قبول</button>
+      <button class="delete-avatar" style="width:100%;padding:13px" onclick="rejectArenaInvite()">❌ رفض</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast-box"></div>
@@ -523,10 +531,11 @@ let soundEnabled = true;
 let appStarted = false;
 let timerInterval = null;
 let dayInterval = null;
-let authBusy = false;
 let activeArenaMatch = null;
 let arenaChannel = null;
 const arenaSettledMatches = new Set();
+window.pendingArenaInvite = null;
+let authBusy = false;
 
 /* =========================================================
    RANK SYSTEM
@@ -820,6 +829,7 @@ function normalizePlayer(raw, username){
         },
 
         notifications: Array.isArray(p.notifications) ? p.notifications : [],
+        usedRedeemCodes: Array.isArray(p.usedRedeemCodes) ? p.usedRedeemCodes : [],
 
         completedDates: {
             ...(p.completedDates || {})
@@ -1478,6 +1488,7 @@ function updateUI(){
     renderPenalties();
     renderShop();
     renderAchievements();
+    updateNotificationBadge();
     updateTimer();
 }
 
@@ -1914,6 +1925,41 @@ function importSave(event){
 }
 
 /* =========================================================
+   REDEEM CODES
+   SECURITY NOTE: real global/one-time redemption must be enforced by Supabase.
+========================================================= */
+const UNIVERSAL_REDEEM_CODES = {
+    "150-000-123": {type:"GOLD", value:150},
+    "120-666-124": {type:"LEVEL", value:1},
+    "160-454-189": {type:"STATS", value:3}
+};
+const SINGLE_USE_REDEEM_CODES = {
+    "999-999-999": {type:"GOLD", value:1000}
+};
+async function redeemCode(){
+    const input=document.getElementById("redeem-code");
+    const code=(input?.value||"").trim().toUpperCase();
+    if(!code || !player || !currentUser){toast("❌ أدخل كودًا صالحًا","danger");return;}
+    player.usedRedeemCodes=Array.isArray(player.usedRedeemCodes)?player.usedRedeemCodes:[];
+    if(player.usedRedeemCodes.includes(code)){toast("❌ استخدمت هذا الكود من قبل","danger");return;}
+    const reward=UNIVERSAL_REDEEM_CODES[code] || SINGLE_USE_REDEEM_CODES[code];
+    if(!reward){toast("❌ الكود غير صحيح أو منتهي","danger");return;}
+    if(SINGLE_USE_REDEEM_CODES[code]){
+        const {data,error}=await db.from("redeemed_codes").insert({code,user_id:currentUser}).select().maybeSingle();
+        if(error){
+            if(String(error.message||"").toLowerCase().includes("duplicate")){toast("❌ هذا الكود تم استخدامه بالفعل","danger");return;}
+            toast("❌ تعذر التحقق من الكود. أضف جدول redeemed_codes في Supabase.","danger");return;
+        }
+    }
+    if(reward.type==="GOLD"){player.gold+=reward.value;player.totalGold+=reward.value;}
+    if(reward.type==="LEVEL"){for(let i=0;i<reward.value;i++){player.level++;player.statPoints+=3;player.gold+=50;player.totalGold+=50;}}
+    if(reward.type==="STATS"){player.statPoints+=reward.value;}
+    player.usedRedeemCodes.push(code);
+    await savePlayerNow(); updateUI(); input.value="";
+    toast(`🎁 تم استرداد الكود: +${reward.value} ${reward.type}`,"gold");
+}
+
+/* =========================================================
    NAVIGATION
 ========================================================= */
 function showPage(pageId, button){
@@ -1975,26 +2021,26 @@ async function subscribeArenaInvites(){
       }).subscribe();
 }
 function showArenaInviteNotification(m){
-    const box=document.getElementById("arena-notification-box");
-    if(!box)return;
-    document.getElementById("arena-notification-text").textContent=`${m.player1_name||"لاعب"} يريد نزالك.`;
-    document.getElementById("arena-notification-bet").textContent=m.wager||0;
-    box.classList.remove("hidden");
+    const box=document.getElementById("arena-invite-modal");
+    if(!box) return;
     window.pendingArenaInvite=m;
+    document.getElementById("invite-opponent-name").textContent=m.player1_name||"لاعب";
+    document.getElementById("invite-wager").textContent=Number(m.wager)||0;
+    const st=m.player1_stats||{};
+    document.getElementById("invite-opponent-stats").innerHTML=`❤️ HP: ${st.HP||1}<br>⚔️ ATK: ${st.ATK||1}<br>🛡️ DF: ${st.DF||1}<br>⚡ SPD: ${st.SPD||1}<br>☠️ PSN: ${st.PSN||1}%<br>🧪 P-RES: ${st.PRES||1}%<br>🎯 CRIT: ${st.CRIT||1}%<br>💚 REC: ${st.REC||1}%<br>⭐ LV: ${st.level||1}`;
+    box.classList.remove("hidden");
 }
-function closeArenaNotification(){document.getElementById("arena-notification-box")?.classList.add("hidden");}
+function closeArenaNotification(){ document.getElementById("arena-invite-modal")?.classList.add("hidden"); }
 function acceptArenaInvite(){
-    const m=window.pendingArenaInvite;
-    closeArenaNotification();
-    if(!m)return;
+    const m=window.pendingArenaInvite; closeArenaNotification(); if(!m) return;
     document.getElementById("arena-opponent-id").value=m.player1_player_id||"";
-    document.getElementById("arena-wager").value=m.wager||25;
-    showPage("arena",null);
-    joinArenaMatch();
+    document.getElementById("arena-wager").value="";
+    showPage("arena",null); joinArenaMatch(); window.pendingArenaInvite=null;
 }
-function rejectArenaInvite(){
-    closeArenaNotification();
-    window.pendingArenaInvite=null;
+async function rejectArenaInvite(){
+    const m=window.pendingArenaInvite; closeArenaNotification(); window.pendingArenaInvite=null;
+    if(!m?.id) return;
+    try{ await db.from("arena_matches").update({status:"cancelled"}).eq("id",m.id).eq("status","waiting"); toast("❌ تم رفض التحدي","danger"); }catch(e){console.error(e);}
 }
 
 /* =========================================================
@@ -2060,89 +2106,45 @@ async function createArenaMatch(){
     const wager=validateWager();
     if(wager===null) return;
     const opponentId=document.getElementById("arena-opponent-id")?.value.trim().toUpperCase();
-    if(!opponentId){
-        setArenaMessage("❌ أدخل Player ID الخاص بصديقك","danger");
-        return;
-    }
-    if(opponentId===player.playerId){
-        setArenaMessage("❌ لا يمكنك تحدي نفسك","danger");
-        return;
-    }
+    if(!opponentId){ setArenaMessage("❌ أدخل Player ID الخاص بصديقك","danger"); return; }
+    if(opponentId===player.playerId){ setArenaMessage("❌ لا يمكنك تحدي نفسك","danger"); return; }
     try{
         const {data,error}=await db.from("arena_matches").insert({
-            invite_code:opponentId,
-            player1_user_id:currentUser,
-            player1_player_id:player.playerId,
-            player1_name:player.name,
-            player1_stats:arenaStatsSnapshot(),
-            wager:wager,
-            status:"waiting"
+            invite_code:opponentId, player1_user_id:currentUser, player1_player_id:player.playerId,
+            player1_name:player.name, player1_stats:arenaStatsSnapshot(), wager, status:"waiting"
         }).select().single();
         if(error) throw error;
         player.gold-=wager;
         activeArenaMatch=data;
         await savePlayerNow();
-        showArenaBattle();
-        subscribeArena(data.id);
-        setArenaMessage("✓ تم إنشاء التحدي. أرسل Player ID لصديقك.","arena-success");
-        updateArenaBattleUI(data);
+        showArenaBattle(); subscribeArena(data.id); updateArenaBattleUI(data);
+        setArenaMessage("✓ تم إنشاء التحدي. بانتظار قبول صديقك.","arena-success");
         toast(`⚔️ تم حجز ${wager} Gold للمباراة`,"gold");
-    }catch(error){
-        console.error(error);
-        setArenaMessage("❌ تعذر إنشاء المباراة: "+error.message,"danger");
-    }
+    }catch(error){ console.error(error); setArenaMessage("❌ تعذر إنشاء المباراة: "+error.message,"danger"); }
 }
 
 async function joinArenaMatch(){
     if(!player?.setupComplete || !currentUser) return;
-    const wager=validateWager();
-    if(wager===null) return;
     const opponentId=document.getElementById("arena-opponent-id")?.value.trim().toUpperCase();
-    if(!opponentId){
-        setArenaMessage("❌ أدخل Player ID الخاص بالخصم","danger");
-        return;
-    }
+    if(!opponentId){ setArenaMessage("❌ أدخل Player ID الخاص بصديقك فقط","danger"); return; }
     try{
-        const {data,error}=await db.from("arena_matches")
-            .select("*")
-            .eq("player1_player_id",opponentId)
-            .eq("status","waiting")
-            .order("created_at",{ascending:false})
-            .limit(1)
-            .maybeSingle();
+        const {data,error}=await db.from("arena_matches").select("*").eq("player1_player_id",opponentId).eq("status","waiting").order("created_at",{ascending:false}).limit(1).maybeSingle();
         if(error) throw error;
-        if(!data){
-            setArenaMessage("❌ لا توجد مباراة انتظار بهذا الـ ID","danger");
-            return;
-        }
-        if(Number(data.wager)!==wager){
-            setArenaMessage(`❌ رهان المباراة هو ${data.wager} Gold. استخدم نفس المبلغ.`,"danger");
-            return;
-        }
-        const {data:updated,error:updateError}=await db.from("arena_matches")
-            .update({
-                player2_user_id:currentUser,
-                player2_player_id:player.playerId,
-                player2_name:player.name,
-                player2_stats:arenaStatsSnapshot(),
-                status:"ready"
-            })
-            .eq("id",data.id)
-            .eq("status","waiting")
-            .select().single();
+        if(!data){ setArenaMessage("❌ لا توجد مباراة انتظار بهذا الـ ID","danger"); return; }
+        const wager=Number(data.wager);
+        if(wager<25){ setArenaMessage("❌ رهان المباراة غير صالح","danger"); return; }
+        if(player.gold<wager){ setArenaMessage(`❌ تحتاج إلى ${wager} Gold للانضمام. لديك ${player.gold}.`,"danger"); return; }
+        const {data:updated,error:updateError}=await db.from("arena_matches").update({
+            player2_user_id:currentUser, player2_player_id:player.playerId, player2_name:player.name,
+            player2_stats:arenaStatsSnapshot(), status:"ready"
+        }).eq("id",data.id).eq("status","waiting").select().single();
         if(updateError) throw updateError;
         player.gold-=wager;
         activeArenaMatch=updated;
-        await savePlayerNow();
-        showArenaBattle();
-        subscribeArena(updated.id);
-        setArenaMessage("✓ انضممت إلى المباراة. تبدأ المعركة الآن.","arena-success");
-        updateArenaBattleUI(updated);
+        await savePlayerNow(); showArenaBattle(); subscribeArena(updated.id);
+        setArenaMessage(`✓ انضممت. الرهان تلقائيًا ${wager} Gold.`,"arena-success"); updateArenaBattleUI(updated);
         await runArenaBattle(updated);
-    }catch(error){
-        console.error(error);
-        setArenaMessage("❌ تعذر الانضمام: "+error.message,"danger");
-    }
+    }catch(error){ console.error(error); setArenaMessage("❌ تعذر الانضمام: "+error.message,"danger"); }
 }
 
 function subscribeArena(matchId){
@@ -2169,51 +2171,79 @@ function updateArenaBattleUI(match){
     const fmt=s=>s?`❤️ ${s.HP} ⚔️ ${s.ATK} 🟢 ${s.STM} 🔮 ${s.MP} 🛡️ ${s.DF||1} ⚡ ${s.SPD||1} ☠️ ${s.PSN||1}% 🎯 ${s.CRIT||1}% • LV ${s.level}`:"---";
     document.getElementById("fighter-me-stats").textContent=fmt(me.stats);
     document.getElementById("fighter-opponent-stats").textContent=fmt(opp.stats);
-    document.getElementById("arena-status").textContent=match.status==="waiting"?"⏳ في انتظار الخصم...":match.status==="ready"?"🔥 جاهز للقتال!":"🏁 انتهت المباراة";
+    const bd=match.battle_data||{};
+    if(Array.isArray(bd.dice1)&&Array.isArray(bd.dice2)){
+        const md=me===null?[]:(match.player1_user_id===currentUser?bd.dice1:bd.dice2);
+        const od=(match.player1_user_id===currentUser?bd.dice2:bd.dice1);
+        setDiceUI(md[0],md[1],od[0],od[1]);
+        const first=bd.firstUser===match.player1_user_id?match.player1_name:match.player2_name;
+        document.getElementById("initiative-result").textContent=`🎲 ${match.player1_name}: ${bd.sum1}  VS  ${match.player2_name}: ${bd.sum2} — ${first} يبدأ الهجوم!`;
+    }
+    document.getElementById("arena-status").textContent=match.status==="waiting"?"⏳ في انتظار الخصم...":match.status==="ready"?"🔥 جاهز للقتال!":match.status==="battle"?"⚔️ المعركة جارية...":"🏁 انتهت المباراة";
 }
 
 async function runArenaBattle(match){
-    if(!match || match.status!=="ready") return;
-    if(match.battle_started_at) return;
+    if(!match || match.status!=="ready" || match.battle_started_at) return;
     const patch={battle_started_at:new Date().toISOString(),status:"battle"};
     const {data,error}=await db.from("arena_matches").update(patch).eq("id",match.id).eq("status","ready").select().single();
     if(error) return console.error(error);
-    activeArenaMatch=data;
-    updateArenaBattleUI(data);
-    animateBattle();
-    setTimeout(()=>resolveArenaBattle(data),1100);
+    activeArenaMatch=data; updateArenaBattleUI(data);
+    await resolveArenaBattle(data);
 }
 
-function animateBattle(){
-    const me=document.getElementById("fighter-me");
-    const op=document.getElementById("fighter-opponent");
-    me.classList.remove("attack","hit");op.classList.remove("attack","hit");
-    void me.offsetWidth; void op.offsetWidth;
-    me.classList.add("attack");op.classList.add("hit");
-    playSound("level");
-    setTimeout(()=>{op.classList.remove("hit");me.classList.remove("attack");op.classList.add("attack");me.classList.add("hit");},450);
+function rollDie(){ return Math.floor(Math.random()*6)+1; }
+function setDiceUI(me1,me2,op1,op2){
+    const vals={"die-me-1":me1,"die-me-2":me2,"die-op-1":op1,"die-op-2":op2};
+    Object.entries(vals).forEach(([id,v])=>{const el=document.getElementById(id); if(el){el.textContent=v;el.classList.remove("roll");void el.offsetWidth;el.classList.add("roll");}});
+}
+function calculateArenaCombat(match, firstUser){
+    const p1={...match.player1_stats}, p2={...match.player2_stats};
+    let hp1=Math.max(1,Number(p1.HP)||1), hp2=Math.max(1,Number(p2.HP)||1);
+    const maxRounds=30; const logs=[]; let turn=firstUser===match.player1_user_id?1:2;
+    for(let r=1;r<=maxRounds && hp1>0 && hp2>0;r++){
+        const atk=turn===1?p1:p2, def=turn===1?p2:p1;
+        const attackerName=turn===1?match.player1_name:match.player2_name;
+        let damage=Math.max(1,Math.round((Number(atk.ATK)||1)*1.5-(Number(def.DF)||1)*0.7));
+        const crit=Math.random() < Math.min(.5,(Number(atk.CRIT)||1)/100);
+        if(crit) damage=Math.round(damage*1.75);
+        const poison=Math.random() < Math.min(.75,(Number(atk.PSN)||1)/100) && Math.random() >= Math.min(.75,(Number(def.PRES)||1)/100);
+        if(poison) damage+=Math.max(1,Math.round((Number(atk.ATK)||1)*.25));
+        if(turn===1) hp2=Math.max(0,hp2-damage); else hp1=Math.max(0,hp1-damage);
+        logs.push(`الجولة ${r}: ${attackerName} هاجم ${damage} ضرر${crit?" 🎯 CRIT":""}${poison?" ☠️ POISON":""}`);
+        if((turn===1?hp2:hp1)<=0) break;
+        turn=turn===1?2:1;
+    }
+    const winner=hp1===hp2?null:(hp1>0?match.player1_user_id:match.player2_user_id);
+    return {winner,logs,hp1,hp2};
 }
 
 async function resolveArenaBattle(match){
     if(!match || match.status!=="battle") return;
-    // NOTE: for a production system this calculation should be moved to a trusted server/RPC.
     const a=match.player1_stats||{}, b=match.player2_stats||{};
-    const p1=arenaPower(a), p2=arenaPower(b);
-    const total=Math.max(1,p1+p2);
-    let winner=Math.random() < (p1/total) ? match.player1_user_id : match.player2_user_id;
-    const crit1=Math.random() < ((a.CRIT||1)/100);
-    const crit2=Math.random() < ((b.CRIT||1)/100);
-    const poison1=Math.random() < ((a.PSN||1)/100) && Math.random() >= ((b.PRES||1)/100);
-    const poison2=Math.random() < ((b.PSN||1)/100) && Math.random() >= ((a.PRES||1)/100);
-    if(crit1 && !crit2) winner=match.player1_user_id;
-    if(crit2 && !crit1) winner=match.player2_user_id;
-    const result="finished";
-    const battleNote=`${crit1||crit2?"🎯 Critical! ":""}${poison1||poison2?"☠️ Poison! ":""}`;
-    const {data,error}=await db.from("arena_matches").update({status:result,winner_user_id:winner}).eq("id",match.id).eq("status","battle").select().single();
+    const meIsP1=match.player1_user_id===currentUser;
+    const d1=[rollDie(),rollDie()], d2=[rollDie(),rollDie()];
+    const sum1=d1[0]+d1[1], sum2=d2[0]+d2[1];
+    setDiceUI(meIsP1?d1[0]:d2[0],meIsP1?d1[1]:d2[1],meIsP1?d2[0]:d1[0],meIsP1?d2[1]:d1[1]);
+    const firstUser=sum1===sum2 ? (Number(a.SPD)||1)>= (Number(b.SPD)||1) ? match.player1_user_id : match.player2_user_id : (sum1>sum2?match.player1_user_id:match.player2_user_id);
+    const firstName=firstUser===match.player1_user_id?match.player1_name:match.player2_name;
+    document.getElementById("initiative-result").textContent=`🎲 ${match.player1_name}: ${sum1}  VS  ${match.player2_name}: ${sum2} — ${firstName} يبدأ الهجوم!`;
+    animateBattle(firstUser===currentUser);
+    const result=calculateArenaCombat(match,firstUser);
+    const winner=result.winner;
+    const battleData={dice1:d1,dice2:d2,sum1,sum2,firstUser,logs:result.logs,hp1:result.hp1,hp2:result.hp2};
+    const {data,error}=await db.from("arena_matches").update({status:winner?"finished":"draw",winner_user_id:winner,battle_data:battleData}).eq("id",match.id).eq("status","battle").select().single();
     if(error){console.error(error);return;}
     activeArenaMatch=data;
-    document.getElementById("battle-log").textContent=battleNote+`Winner: ${winner===match.player1_user_id?match.player1_name:match.player2_name}`;
+    document.getElementById("battle-log").textContent=result.logs.join("\n")+`\n\n${winner?"🏆 الفائز: "+(winner===match.player1_user_id?match.player1_name:match.player2_name):"🤝 تعادل"}`;
     await finishArenaLocal(data);
+}
+
+function animateBattle(attackerIsMe=true){
+    const me=document.getElementById("fighter-me"), op=document.getElementById("fighter-opponent");
+    me.classList.remove("attack","hit");op.classList.remove("attack","hit"); void me.offsetWidth;
+    const attacker=attackerIsMe?me:op, defender=attackerIsMe?op:me;
+    attacker.classList.add("attack"); defender.classList.add("hit"); playSound("level");
+    setTimeout(()=>{attacker.classList.remove("attack");defender.classList.remove("hit");},600);
 }
 
 async function finishArenaLocal(match){
@@ -2221,7 +2251,11 @@ async function finishArenaLocal(match){
     if(arenaSettledMatches.has(match.id)) return;
     arenaSettledMatches.add(match.id);
     const log=document.getElementById("battle-log");
-    if(match.status==="draw"){
+    if(match.status==="cancelled"){
+        player.gold+=Number(match.wager||0);
+        log.textContent=`↩️ تم إلغاء التحدي — تمت إعادة ${match.wager} Gold.`;
+        toast("↩️ تم إلغاء مباراة Arena وإعادة الرهان","gold");
+    }else if(match.status==="draw"){
         player.gold+=Number(match.wager||0);
         player.arenaDraws=(player.arenaDraws||0)+1;
         log.textContent=`🤝 تعادل — تمت إعادة ${match.wager} Gold.`;
